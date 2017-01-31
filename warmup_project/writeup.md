@@ -1,4 +1,11 @@
-# CompRobo Warmup Project Writeup
+# CompRobo Warmup Project
+##### Kim Asenbec, Brenna Manning, Jordan Van Duyne
+
+For this project, we have programmed a Neato robot to perform a few different tasks.
+These included “Teleop Twist”, driving the neato in a square, and following a wall.
+
+
+### Writeup
 - For each behavior, describe the problem at a high-level.  Include any relevant diagrams that help explain your approach.  Discuss your strategy at a high-level and include any tricky decisions that had to be made to realize a successful implementation.
 
 - For the finite state controller, what was the overall behavior.  What were the states? What did the robot do in each state? How did you combine and how did you detect when to transition between behaviors?  Consider including a state transition diagram in your writeup.
@@ -10,6 +17,15 @@
 - What would you do to improve your project if you had more time?
 
 - What are the key takeaways from this assignment for future robotic programming projects?
+
+
+# Teleop Twist
+In this task, we wrote our own code to teleoperate the robot. Our code is meant to mimic the behavior of teleop_twist_keyboard. To determine the appropriate twist for each keystroke, we ran “rostopic pub /cmd_vel Twist” from the command line, while running teleop_twist_keyboard. Doing this allowed us to observe the linear and angular values tied to each keystroke within teleop_twist_keyboard.
+We structured our code within a TeleopNode class. After detecting a keystroke, we enter the corresponding conditional statement. Within each condition, we set the appropriate values for the twist. The twist is then published, and the neato moves as directed.
+
+# Drive Square
+For this task, we wrote code to make the robot drive in a 1m by 1m square path using timing. Similarly to the Teleop Twist task, we published a twist using  /cmd_vel Twist to make the robot move.  This code was structured within a SquareNode class, and switched between two states: “forward” and “turning”. In the forward state, the robot is sent a twist with a positive linear vector of (1.0, 0,0, 0.0) so that it moves forward.  Using this twist, the robot will drive forward at 1 m/s, so after 1 second has passed it will have driven 1 meter. After 1 second has passed in the driving forward state, the state switches to the turning state. Here, the robot is sent a twist with an angular vector of (0.0, 0.0, 0.5) which causes it to rotate left at a speed of 0.5 radians per second. After approximately pi seconds, a full 90 degree turn is completed, and the state is switched back to the forward state. This repeats until the robot has fully driven in a square. 
+
 
 # Wall following
 
