@@ -2,7 +2,8 @@
 
 """  Neato drives parallel to nearest wall. """
 
-from geometry_msgs.msg import Vector3, Twist
+from geometry_msgs.msg import Vector3, Twist, Point
+from visualization_msgs.msg import Marker
 from sensor_msgs.msg import LaserScan
 import rospy
 import math
@@ -18,6 +19,7 @@ class WallNode(object):
         self.parallel = False
         self.ranges = []
         self.threshold = .07
+        self.my_marker = 0
 
     def stop(self):
         self.publisher.publish(Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0)))
@@ -34,6 +36,9 @@ class WallNode(object):
             front_right.append(m.ranges[311+i])
          
         self.ranges = [front_left, back_left, back_right, front_right] 
+
+    def wall_viz(self, a, b):
+        my_marker = Marker(type=4)
 
 
     def is_parallel(self):
@@ -106,6 +111,7 @@ class WallNode(object):
    
 
                 self.publisher.publish(twist)
+                self.publisher.publish(self.my_marker)
             self.r.sleep()
         
             
