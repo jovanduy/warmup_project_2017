@@ -5,6 +5,7 @@
 from geometry_msgs.msg import Vector3, Twist, Point
 from visualization_msgs.msg import Marker
 from sensor_msgs.msg import LaserScan
+from std_msgs.msg import Header
 import rospy
 import math
 import sys
@@ -14,6 +15,7 @@ class WallNode(object):
         rospy.init_node('wall_follow')
         self.r = rospy.Rate(5)
         self.publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+        self.marker_publisher = rospy.Publisher('/visualization_msgs', Marker, queue_size=10)
         rospy.Subscriber('/scan', LaserScan, self.process_scan)
         self.closest_corner = None
         self.parallel = False
@@ -37,13 +39,18 @@ class WallNode(object):
          
         self.ranges = [front_left, back_left, back_right, front_right] 
 
-    def wall_viz(self, a, b):
-        my_marker = Marker(type=4)
+    def wall_viz(self, a, b, angle_a, angle_b):
+        my_header = Header(stamp=rospy.Time.now(), frame_id="base_link")
+        root2 = math.sqrt(2)/2
+        point1 = Point(a*math.cos(math.radians(angle_a)), a*math.sin(math.radians(angle_a)), 0)
+        point2 = Point(b*math.cos(math.radians(angle_b)), b*math.sin(math.radians(angle_b)), 0)
+        self.my_marker = Marker(header=my_header, type=4, points=[point1, point2])
 
 
     def is_parallel(self):
         if self.closest_corner == 0 or self.closest_corner == 1:
             # 10 degree range
+            self.wall_viz(self.ranges[0][4], self.ranges[1][4], 45, 135)
             for i in range (0,9):
                 if abs(self.ranges[0][i]-self.ranges[1][8-i]) < self.threshold and (self.ranges[0][i] != sys.maxint or self.ranges[1][8-i] != sys.maxint):
                     self.parallel = True
@@ -51,17 +58,17 @@ class WallNode(object):
                     # find any equal ranges 90 degrees apart to determine if parallel
                 else:
                     self.parallel = False
-        
 
 
         elif self.closest_corner == 2 or self.closest_corner == 3:
-            for i in range(0,9):
-                
+            self.wall_viz(self.ranges[2][4], self.ranges[3][4], 225, 315)
+            for i in range(0,9):                
                 if abs(self.ranges[2][i]-self.ranges[3][8-i]) < self.threshold and (self.ranges[2][i] != sys.maxint or self.ranges[3][8-i] != sys.maxint):
                     self.parallel = True
                     return
                 else:
                     self.parallel = False
+
             
         return   
 
@@ -75,7 +82,6 @@ class WallNode(object):
                         if self.ranges[i][j] == 0.0:
                             self.ranges[i][j] = sys.maxint
 
-                print self.ranges
                 min_ranges = []
                 maxint_counter = 0
                 for i in range(0,4):
@@ -85,10 +91,7 @@ class WallNode(object):
                         maxint_counter += 1
                 if maxint_counter >= 3:
                     pass
-                print 'min_ranges'
-                print min_ranges
                 self.closest_corner = min_ranges.index(min(min_ranges))
-                print self.closest_corner
                 self.is_parallel()
                 if self.parallel:
                     # go forward
@@ -109,9 +112,9 @@ class WallNode(object):
                     twist = Twist(linear=Vector3(0.05,0.0,0.0), angular=Vector3(0.0,0.0,0.2))
 
    
-
+            
                 self.publisher.publish(twist)
-                self.publisher.publish(self.my_marker)
+                self.marker_publisher.publish(self.my_marker)
             self.r.sleep()
         
             
