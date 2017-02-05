@@ -5,7 +5,7 @@
 from geometry_msgs.msg import Vector3, Twist, Point
 from visualization_msgs.msg import Marker
 from sensor_msgs.msg import LaserScan
-from std_msgs.msg import Header
+from std_msgs.msg import Header, ColorRGBA
 import rospy
 import math
 import sys
@@ -15,7 +15,7 @@ class WallNode(object):
         rospy.init_node('wall_follow')
         self.r = rospy.Rate(5)
         self.publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
-        self.marker_publisher = rospy.Publisher('/visualization_msgs', Marker, queue_size=10)
+        self.marker_publisher = rospy.Publisher('/wall_topic', Marker, queue_size=10)
         rospy.Subscriber('/scan', LaserScan, self.process_scan)
         self.closest_corner = None
         self.parallel = False
@@ -44,7 +44,7 @@ class WallNode(object):
         root2 = math.sqrt(2)/2
         point1 = Point(a*math.cos(math.radians(angle_a)), a*math.sin(math.radians(angle_a)), 0)
         point2 = Point(b*math.cos(math.radians(angle_b)), b*math.sin(math.radians(angle_b)), 0)
-        self.my_marker = Marker(header=my_header, type=4, points=[point1, point2])
+        self.my_marker = Marker(header=my_header, type=4, points=[point1, point2], color=ColorRGBA(0.0, 0.0, 1.0, 1.0), scale=Vector3(0.2, 0.2, 0.2))
 
 
     def is_parallel(self):

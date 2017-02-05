@@ -16,14 +16,13 @@ class PersonNode(object):
         self.r = rospy.Rate(5)
         self.publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.marker_publisher = rospy.Publisher('/marker_topic', Marker, queue_size=10)
-        #rospy.Subscriber('/projected_stable_scan', PointCloud, self.process_scan)
         rospy.Subscriber('/scan', LaserScan, self.process_scan)
         self.twist = 0
         self.my_marker = 0
         self.coords = []
         self.person_point = 0
         self.person_polar = (0, 0)
-        self.twist = 0
+
 
     def stop(self):
         self.publisher.publish(Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0)))
@@ -48,7 +47,7 @@ class PersonNode(object):
         avg_range = 0
 
         for point in self.coords:
-            if point[1] != 0:
+            if point[1] != 0 and point[1] < 1.5:
                 sum_angles += point[0]
                 sum_ranges += point[1]
                 point_count += 1
