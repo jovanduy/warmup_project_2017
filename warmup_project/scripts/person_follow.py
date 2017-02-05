@@ -101,10 +101,8 @@ class PersonNode(object):
             self.visualize()
             self.calculate_velocity()
             if self.my_marker != 0:
-                "publishing"
                 self.marker_publisher.publish(self.my_marker)
             if self.twist != 0:
-                "publishing"
                 self.publisher.publish(self.twist)
               
             self.r.sleep()
