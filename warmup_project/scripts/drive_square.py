@@ -17,23 +17,35 @@ class SquareNode(object):
 
     def stop(self):
         self.publisher.publish(Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0)))
+
+
+        
+    def turn_left(self):
+        if (rospy.Time.now() - self.time >= rospy.Duration(3)):
+            self.time = rospy.Time.now()
+            return self.go_forward
+        self.twist= Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.5))
+        self.publisher.publish(self.twist)
+        return self.turn_left
+
+
+    
+    def go_forward(self):
+        if (rospy.Time.now() - self.time >= rospy.Duration(2)):
+            self.time = rospy.Time.now()
+            return self.turn_left
+        self.twist = Twist(linear=Vector3(0.5, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
+        self.publisher.publish(self.twist)
+        return self.go_forward
+
+
         
     def run(self):
         rospy.on_shutdown(self.stop)
-        while not rospy.is_shutdown():
-            if self.curr_state == self.states[0]:
-                twist = Twist(linear=Vector3(0.5, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
-                if (rospy.Time.now() - self.time >= rospy.Duration(2)):
-                    self.time = rospy.Time.now()
-                    self.curr_state = self.states[1]
-            elif self.curr_state == self.states[1]:
-                twist = Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.5))
-                if (rospy.Time.now() - self.time >= rospy.Duration(3.0)):
-                    self.time = rospy.Time.now()
-                    self.curr_state = self.states[0]
-            self.publisher.publish(twist)
+        curr_state = self.go_forward
+        while not rospy.is_shutdown():           
+            curr_state = curr_state()
             self.r.sleep()
-        
             
 square_node = SquareNode()
 square_node.run()
