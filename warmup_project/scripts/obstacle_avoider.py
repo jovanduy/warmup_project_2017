@@ -29,7 +29,8 @@ class ObstacleNode(object):
     
     def process_scan(self, m):
         self.ranges = m.ranges
-        if (self.ranges[0] < 1 and self.ranges[0] != 0):            self.obstacle_front = True
+        if (self.ranges[0] < 1 and self.ranges[0] != 0):            
+            self.obstacle_front = True
         else:
             self.obstacle_front = False
 
@@ -48,7 +49,8 @@ class ObstacleNode(object):
         return self.turn_left        
     def turn_right(self):
         if (rospy.Time.now() - self.time >= rospy.Duration(3)):
-            self.time = rospy.Time.now()            return self.move_towards_goal
+            self.time = rospy.Time.now()            
+            return self.move_towards_goal
         self.twist= Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, -0.5))
         self.publisher.publish(self.twist)
         return self.turn_right
