@@ -7,8 +7,7 @@ from visualization_msgs.msg import Marker
 from sensor_msgs.msg import LaserScan, PointCloud
 from std_msgs.msg import Header, ColorRGBA
 import rospy
-import math
-import sys
+import mathimport sys
 
 class ObstacleNode(object):
     def __init__(self):
@@ -18,8 +17,7 @@ class ObstacleNode(object):
         self.marker_publisher = rospy.Publisher('/obstacle_topic', Marker, queue_size=10)
         rospy.Subscriber('/scan', LaserScan, self.process_scan)
         self.twist = 0
-        self.my_marker = 0
-        self.coords = []
+        self.my_marker = 0        self.coords = []
         self.time = rospy.Time.now()
         self.obstacle_front = False
         self.obstacle_side = False
@@ -28,20 +26,10 @@ class ObstacleNode(object):
     def stop(self):
         self.publisher.publish(Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0)))
         
-
-    """def visualize(self):
-        my_scale = Vector3(0.2,0.2,0.2)
-        my_color = ColorRGBA(0, 0.0, 1.0, 1.0)
-        my_header = Header(stamp=rospy.Time.now(), frame_id="base_link")
-        person_pose = Pose(position=self.person_point)
-        if self.person_point != 0:
-            self.my_marker = Marker(header=my_header, type=2, pose=person_pose, scale=my_scale, color=my_color)"""
-         
     
     def process_scan(self, m):
         self.ranges = m.ranges
-        if (self.ranges[0] < 1 and self.ranges[0] != 0):
-            self.obstacle_front = True
+        if (self.ranges[0] < 1 and self.ranges[0] != 0):            self.obstacle_front = True
         else:
             self.obstacle_front = False
 
@@ -51,19 +39,16 @@ class ObstacleNode(object):
         elif self.ranges[270] == 0:
             self.obstacle_side = False
         print self.obstacle_side
-            
-    def turn_left(self):
+                def turn_left(self):
         if (rospy.Time.now() - self.time >= rospy.Duration(3)):
             self.time = rospy.Time.now()
             return self.go_along
         self.twist= Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.5))
         self.publisher.publish(self.twist)
-        return self.turn_left
-        
+        return self.turn_left        
     def turn_right(self):
         if (rospy.Time.now() - self.time >= rospy.Duration(3)):
-            self.time = rospy.Time.now()
-            return self.move_towards_goal
+            self.time = rospy.Time.now()            return self.move_towards_goal
         self.twist= Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, -0.5))
         self.publisher.publish(self.twist)
         return self.turn_right
@@ -71,7 +56,6 @@ class ObstacleNode(object):
     def go_forward(self):
         self.twist = Twist(linear=Vector3(1.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
         self.publisher.publish(self.twist)
-
     def go_along(self):
         if (rospy.Time.now() - self.time >= rospy.Duration(1)):
             if not self.obstacle_side:
@@ -97,15 +81,9 @@ class ObstacleNode(object):
         rospy.on_shutdown(self.stop)
         curr_state = self.move_towards_goal
         while not rospy.is_shutdown():           
-            #self.visualize()
             
             curr_state = curr_state()
             print curr_state
-            
-            """if self.my_marker != 0:
-                self.marker_publisher.publish(self.my_marker)
-            if self.twist != 0:
-                self.publisher.publish(self.twist)"""
               
             self.r.sleep()
         
