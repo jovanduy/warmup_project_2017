@@ -14,7 +14,6 @@ import sys
 
 class FSM_Node(object):
     def __init__(self):
-        rospy.init_node('FSM')
         self.r = rospy.Rate(5)
         self.person_follower = PersonNode()
         self.drive_square = SquareNode()
@@ -56,4 +55,5 @@ class FSM_Node(object):
         
 if __name__ == '__main__':            
     fsm = FSM_Node()
+    rospy.init_node('FSM')
     fsm.run()

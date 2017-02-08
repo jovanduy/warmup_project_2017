@@ -12,7 +12,7 @@ import sys
 
 class PersonNode(object):
     def __init__(self):
-        rospy.init_node('person_follow')
+        
         self.r = rospy.Rate(5)
         self.publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.marker_publisher = rospy.Publisher('/marker_topic', Marker, queue_size=10)
@@ -108,4 +108,5 @@ class PersonNode(object):
         
 if __name__ == '__main__':            
     person_node = PersonNode()
+    rospy.init_node('person_follow')
     person_node.run()

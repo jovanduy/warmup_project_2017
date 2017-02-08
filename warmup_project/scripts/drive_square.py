@@ -8,7 +8,6 @@ import math
 
 class SquareNode(object):
     def __init__(self):
-        rospy.init_node('square')
         self.r = rospy.Rate(5)
         self.publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.time = rospy.Time.now()
@@ -49,4 +48,5 @@ class SquareNode(object):
             
 if __name__ == '__main__':
     square_node = SquareNode()
+    rospy.init_node('square')
     square_node.run()
