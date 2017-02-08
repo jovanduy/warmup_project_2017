@@ -22,7 +22,7 @@ class WallNode(object):
         self.ranges = []
         self.threshold = .07
         self.my_marker = 0
-        self.orientation = None
+        self.twist= None
         
     def stop(self):
         self.publisher.publish(Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0)))
@@ -68,7 +68,7 @@ class WallNode(object):
         self.my_marker = Marker(header=my_header, type=4, points=[point1, point2], color=ColorRGBA(0.0, 0.0, 1.0, 1.0), scale=Vector3(0.2, 0.2, 0.2))
 
 
-    def find_orientation(self):
+    def is_parallel(self):
         self.compute_closest_corner()
         if self.closest_corner == 0 or self.closest_corner == 1:
             # 10 degree range
@@ -76,36 +76,25 @@ class WallNode(object):
             for i in range (0,9):
                 if abs(self.ranges[0][i]-self.ranges[1][8-i]) < self.threshold and (self.ranges[0][i] != sys.maxint or self.ranges[1][8-i] != sys.maxint):
                     self.parallel = True
-                    self.orientation =  "straight"
+                    return
                     # find any equal ranges 90 degrees apart to determine if parallel
-                else:
-                    self.parallel = False
-                    if self.closest_corner == 0:
-                        self.orientation = "right"
-                    else:
-                        self.orientation = "left"
+            self.parallel = False
                     
         elif self.closest_corner == 2 or self.closest_corner == 3:
             self.wall_viz(self.ranges[2][4], self.ranges[3][4], 225, 315)
             for i in range(0,9):                
                 if abs(self.ranges[2][i]-self.ranges[3][8-i]) < self.threshold and (self.ranges[2][i] != sys.maxint or self.ranges[3][8-i] != sys.maxint):
                     self.parallel = True
-                    self.orientation = "straight"
-                else:
-                    self.parallel = False
-                    if self.closest_corner == 2:
-                        self.orientation = "right"
-                    else:
-                        self.orientation = "left"
-   
+                    return
+            self.parallel = False
 
     def clean_data(self):
-         if self.ranges != []:
-             for i, array in enumerate(self.ranges):
-                 for j in range(len(array)):
-                     if self.ranges[i][j] == 0.0:
-                         self.ranges[i][j] = sys.maxint
-        return self.find_orientation
+        if self.ranges != []:
+            for i, array in enumerate(self.ranges):
+                for j in range(len(array)):
+                    if self.ranges[i][j] == 0.0:
+                        self.ranges[i][j] = sys.maxint
+            self.is_parallel()
 
     def compute_closest_corner(self):
         min_ranges = []
@@ -115,23 +104,27 @@ class WallNode(object):
             min_ranges.append(minimum)
             if minimum == sys.maxint:
                 maxint_counter += 1
-                if maxint_counter >= 3:
-                    pass
+            if maxint_counter < 3:
                 self.closest_corner = min_ranges.index(min(min_ranges))
 
-                
+    def choose_action():
+        if self.parallel:
+            # go forward
+            self.twist = Twist(linear=Vector3(0.5, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
+        elif self.closest_corner == 0 or self.closest_corner ==2:
+            # turn right
+            self.twist = Twist(linear=Vector3(0.5, 0.0, 0.0), angular=Vector3(0.0, 0.0, -0.2))
+        elif self.closest_corner == 1 or self.closest_corner == 3:
+            # turn left
+            self.twist = Twist(linear=Vector3(0.05,0.0,0.0), angular=Vector3(0.0,0.0,0.2))
+        
     def run(self):
         rospy.on_shutdown(self.stop)
         while not rospy.is_shutdown():
             self.clean_data()
-            if self.orientation == "straight":
-                self.go_forward()
-            elif self.orientation == "left":
-                self.turn_left()
-            elif self.orientation == "right":
-                self.turn_right()
-            
-            self.publisher.publish(twist)
+            self.choose_action()           
+            if self.twist:
+                self.publisher.publish(self.twist)
             self.marker_publisher.publish(self.my_marker)
             self.r.sleep()
         
