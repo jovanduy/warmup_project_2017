@@ -21,7 +21,7 @@ class WallNode(object):
         self.parallel = False
         self.ranges = []
         self.threshold = .07
-        self.my_marker = 0
+        self.my_marker = None
         self.twist= None
         
     def stop(self):
@@ -51,7 +51,7 @@ class WallNode(object):
         self.publisher.publish(self.twist)
         return self.turn_left
 
-     def turn_right(self):
+    def turn_right(self):
         if self.is_parallel():
             self.time = rospy.Time.now()
             return self.go_forward
@@ -107,7 +107,7 @@ class WallNode(object):
             if maxint_counter < 3:
                 self.closest_corner = min_ranges.index(min(min_ranges))
 
-    def choose_action():
+    def choose_action(self):
         if self.parallel:
             # go forward
             self.twist = Twist(linear=Vector3(0.5, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
@@ -125,7 +125,8 @@ class WallNode(object):
             self.choose_action()           
             if self.twist:
                 self.publisher.publish(self.twist)
-            self.marker_publisher.publish(self.my_marker)
+	    if self.my_marker:
+            	self.marker_publisher.publish(self.my_marker)
             self.r.sleep()
         
             
