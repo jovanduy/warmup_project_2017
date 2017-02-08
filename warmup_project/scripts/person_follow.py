@@ -77,7 +77,7 @@ class PersonNode(object):
             forward_speed = 0
         # robot speed?
         self.twist= Twist(linear=Vector3(forward_speed, 0.0, 0.0), angular=Vector3(0.0, 0.0, turn_speed))
-
+        return self.calculate_velocity
 
 
     def process_scan(self, m):
