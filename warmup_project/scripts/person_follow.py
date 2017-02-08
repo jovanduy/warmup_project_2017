@@ -107,6 +107,6 @@ class PersonNode(object):
             self.r.sleep()
         
 if __name__ == '__main__':            
-    person_node = PersonNode()
     rospy.init_node('person_follow')
+    person_node = PersonNode()
     person_node.run()

@@ -13,6 +13,7 @@ class SquareNode(object):
         self.time = rospy.Time.now()
         self.states = ['forward', 'turning']
         self.curr_state = self.states[0]
+	self.twist = None
 
     def stop(self):
         self.publisher.publish(Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0)))
@@ -47,6 +48,6 @@ class SquareNode(object):
             self.r.sleep()
             
 if __name__ == '__main__':
-    square_node = SquareNode()
     rospy.init_node('square')
+    square_node = SquareNode()
     square_node.run()

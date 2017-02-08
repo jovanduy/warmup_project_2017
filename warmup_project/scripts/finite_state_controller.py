@@ -19,7 +19,7 @@ class FSM_Node(object):
         self.drive_square = SquareNode()
         self.publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         rospy.Subscriber('/scan', LaserScan, self.person_follower.process_scan)
-        self.twist = 0
+        self.twist = None
         
     def stop(self):
         self.publisher.publish(Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0)))
@@ -36,24 +36,25 @@ class FSM_Node(object):
                 # there is a person
                 curr_state = self.person_follower.calculate_velocity
                 self.twist = self.person_follower.twist
-            elif curr_state == self.person_follower.calculate_velocity:
+            elif curr_state == PersonNode.calculate_velocity:
                 # just lost person, begin square
                 curr_state = self.drive_square.go_forward
                 self.twist = self.drive_square.twist
             else:
                 # continue square
                 self.twist = self.drive_square.twist
+	    if curr_state == SquareNode.go_forward or curr_state == SquareNode.turn_left:
+		self.twist = self.drive_square.twist
             curr_state = curr_state()
             self.person_follower.visualize()
             if self.person_follower.my_marker != 0:
                 self.person_follower.marker_publisher.publish(self.person_follower.my_marker)
-	    self.twist = Twist(linear=Vector3(0.5, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0)) 
-            if self.twist != 0:
+            if self.twist:
                 self.publisher.publish(self.twist)
               
             self.r.sleep()
         
 if __name__ == '__main__':            
-    fsm = FSM_Node()
     rospy.init_node('FSM')
+    fsm = FSM_Node()
     fsm.run()
