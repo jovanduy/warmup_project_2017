@@ -12,8 +12,7 @@ import rospy
 import math
 import sys
 
-print "hi i imported"
-class FSM(object):
+class FSM_Node(object):
     def __init__(self):
         rospy.init_node('FSM')
         self.r = rospy.Rate(5)
@@ -55,6 +54,6 @@ class FSM(object):
               
             self.r.sleep()
         
-            
-person_node = PersonNode()
-person_node.run()
+if __name__ == '__main__':            
+    fsm = FSM_Node()
+    fsm.run()
