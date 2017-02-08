@@ -12,6 +12,7 @@ import rospy
 import math
 import sys
 
+print "hi i imported"
 class FSM(object):
     def __init__(self):
         rospy.init_node('FSM')
@@ -48,6 +49,7 @@ class FSM(object):
             self.person_follower.visualize()
             if self.person_follower.my_marker != 0:
                 self.person_follower.marker_publisher.publish(self.person_follower.my_marker)
+	    self.twist = Twist(linear=Vector3(0.5, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0)) 
             if self.twist != 0:
                 self.publisher.publish(self.twist)
               

@@ -106,6 +106,6 @@ class PersonNode(object):
               
             self.r.sleep()
         
-            
-person_node = PersonNode()
-person_node.run()
+if __name__ == '__main__':            
+    person_node = PersonNode()
+    person_node.run()

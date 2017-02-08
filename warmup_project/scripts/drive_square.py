@@ -47,5 +47,6 @@ class SquareNode(object):
             curr_state = curr_state()
             self.r.sleep()
             
-square_node = SquareNode()
-square_node.run()
+if __name__ == '__main__':
+    square_node = SquareNode()
+    square_node.run()
