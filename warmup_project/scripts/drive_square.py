@@ -11,31 +11,38 @@ class SquareNode(object):
         self.r = rospy.Rate(5)
         self.publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.time = rospy.Time.now()
-        self.states = ['forward', 'turning']
-        self.curr_state = self.states[0]
-	self.twist = None
+        self.twist = None
 
     def stop(self):
+        # Called on shutdown.
+        # Publish a twist with a linear velocity of 0 and an angular velocity of 0 to stop the Neato.
         self.publisher.publish(Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0)))
-
-
         
     def turn_left(self):
+        # Publish a twist to make the Neato turn left.
         if (rospy.Time.now() - self.time >= rospy.Duration(3)):
-            self.time = rospy.Time.now()
+            # Checks whether enough time has passed for a 90 degree turn to be completed.
+            self.time = rospy.Time.now() 
+            # Resets time and changes state to new action.
             return self.go_forward
+        # Twist with positive angular velocity to turn left.
         self.twist= Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.5))
         self.publisher.publish(self.twist)
+        # Current state remains the same.
         return self.turn_left
 
 
     
     def go_forward(self):
+        # Publish a twist to make the Neato move forward.
         if (rospy.Time.now() - self.time >= rospy.Duration(2)):
+            # Checks whether enough time has passed for the Neato to drive forward 1 meter.
             self.time = rospy.Time.now()
+            # Resets time and changes state to new action.
             return self.turn_left
         self.twist = Twist(linear=Vector3(0.5, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
         self.publisher.publish(self.twist)
+        # Current state remains the same.
         return self.go_forward
 
 
