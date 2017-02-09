@@ -11,6 +11,7 @@ import rospy
 
 class TeleopNode(object):
     def __init__(self):
+        """Initializes a rospy node, as well as a the rate and publisher.""""
         rospy.init_node('teleop_drive')
         self.r = rospy.Rate(2)
         self.publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
@@ -18,12 +19,14 @@ class TeleopNode(object):
         self.key = None
 
     def setKey(self):
+        """We were given this function by Paul. It allows us to detect which key is entered."""
         tty.setraw(sys.stdin.fileno())
         select.select([sys.stdin], [], [], 0)
         self.key = sys.stdin.read(1)
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.settings)
     
     def run(self):
+        """When a keystroke is detected, we create and then publish the appropriate twist."""
         while self.key != '\x03':
             self.setKey()
             if self.key == 'u':
@@ -47,5 +50,6 @@ class TeleopNode(object):
             self.publisher.publish(twist)
             self.r.sleep()
             
-teleop_node = TeleopNode()
-teleop_node.run()
+if __name__ == "__main__":
+    teleop_node = TeleopNode()
+    teleop_node.run()
