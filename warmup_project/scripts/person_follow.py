@@ -25,11 +25,13 @@ class PersonNode(object):
 
 
     def stop(self):
+        """ This function publishes a twist to make the robot stop."""
         self.publisher.publish(Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0)))
         
 
     def visualize(self):
-        # Creates marker at the location of the detected person to be published for visualization.
+        """ This function creates marker at the location 
+        of the detected person to be published for visualization."""
         my_scale = Vector3(0.2,0.2,0.2)
         my_color = ColorRGBA(0, 0.0, 1.0, 1.0)
         my_header = Header(stamp=rospy.Time.now(), frame_id="base_link")
@@ -40,7 +42,8 @@ class PersonNode(object):
     
     
     def find_person(self):
-        # Determines location of person based on self.coords, an array of lidar scan readings from in front of the Neato
+        """ This function determines location of person based on self.coords,
+        an array of lidar scan readings from in front of the Neato. """
         sum_angles = 0
         sum_ranges = 0
         point_count = 0
@@ -71,6 +74,7 @@ class PersonNode(object):
         self.person_point = Point(avg_range*math.cos(math.radians(avg_angle)), avg_range*math.sin(math.radians(avg_angle)), 0)
         
     def calculate_velocity(self):
+        """ This function calculates what the robot's linear and angular velocities should be. """
         # Robot position in cartesian = (0, 0, 0)
         # Person position in cartesian = self.person_point
         # Robot position in polar = (0,0)
@@ -89,6 +93,7 @@ class PersonNode(object):
 
 
     def process_scan(self, m):
+        """ This function is the callback for our laser subscriber. """
         self.ranges = m.ranges
         self.coords = []
         for angle in range(0,30):
@@ -100,6 +105,7 @@ class PersonNode(object):
 
 
     def run(self):
+        """ This function is the main run loop."""
         rospy.on_shutdown(self.stop)
 
         while not rospy.is_shutdown():

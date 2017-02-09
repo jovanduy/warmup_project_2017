@@ -14,12 +14,12 @@ class SquareNode(object):
         self.twist = None
 
     def stop(self):
-        # Called on shutdown.
-        # Publish a twist with a linear velocity of 0 and an angular velocity of 0 to stop the Neato.
+         """ This function is called on shutdown and publishes
+          a twist with linear and angular velocities of 0 to stop the Neato."""
         self.publisher.publish(Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0)))
         
     def turn_left(self):
-        # Publish a twist to make the Neato turn left.
+        """ This function publishes a twist to make the Neato turn left. """
         if (rospy.Time.now() - self.time >= rospy.Duration(3)):
             # Checks whether enough time has passed for a 90 degree turn to be completed.
             self.time = rospy.Time.now() 
@@ -34,7 +34,7 @@ class SquareNode(object):
 
     
     def go_forward(self):
-        # Publish a twist to make the Neato move forward.
+        """ This function publishes a twist to make the Neato move forward."""
         if (rospy.Time.now() - self.time >= rospy.Duration(2)):
             # Checks whether enough time has passed for the Neato to drive forward 1 meter.
             self.time = rospy.Time.now()
@@ -48,6 +48,7 @@ class SquareNode(object):
 
         
     def run(self):
+        """This function is the main run loop"""
         rospy.on_shutdown(self.stop)
         curr_state = self.go_forward
         while not rospy.is_shutdown():           
