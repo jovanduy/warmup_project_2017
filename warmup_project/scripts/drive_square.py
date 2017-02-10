@@ -14,8 +14,8 @@ class SquareNode(object):
         self.twist = None
 
     def stop(self):
-         """ This function is called on shutdown and publishes
-          a twist with linear and angular velocities of 0 to stop the Neato."""
+        """ This function is called on shutdown and publishes
+        a twist with linear and angular velocities of 0 to stop the Neato."""
         self.publisher.publish(Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0)))
         
     def turn_left(self):
@@ -42,7 +42,7 @@ class SquareNode(object):
             return self.turn_left
         self.twist = Twist(linear=Vector3(0.5, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
         self.publisher.publish(self.twist)
-        # Current state remains the same.
+       # Current state remains the same.
         return self.go_forward
 
 
