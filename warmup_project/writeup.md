@@ -133,7 +133,9 @@ Then, after ```curr_state()``` has been executed, we publish this ```twist``` at
 
 One of the main problems we had was figuring out how to include our person follower logic, which was not originally implemented as an FSM, into our finite state controller. After realizing that our ```PersonNode``` had one main action for the Neato to execute (move in such a way that follows the identified person), we were easily able to modify our person follower code to be usable by our finite state controller.
 
-We also realized how important it was for our code to be modular. Every method should only do one thing. The
+We also realized how important it was for our code to be modular. Every method should only do one thing. This mainly affected our refactoring of our person follower implementation.
+
+We also had difficulty figuring out how exactly our FSM would operate and how we would translate its operations into code until we drew out pictures and ideas onto a whiteboard. Doing so really helped us organize our thoughts and understand what one another was thinking.
 
 
 # Conclusion
