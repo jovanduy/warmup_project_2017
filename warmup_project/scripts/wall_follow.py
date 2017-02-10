@@ -11,7 +11,15 @@ import math
 import sys
 
 class WallNode(object):
+    """
+    Class for a wall follower node
+    """
     def __init__(self):
+        """
+        Initialize a WallNode object and subscribe to the /scan topic.
+        Create publishers to publish /cmd_vel Twists and Markers
+        representing the detected wall being followed.
+        """
         rospy.init_node('wall_follow')
         self.r = rospy.Rate(5)
         self.publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
@@ -24,9 +32,23 @@ class WallNode(object):
         self.my_marker = 0
 
     def stop(self):
+        """
+        Publish a /cmd_vel Twist corresponding to not moving
+        """
         self.publisher.publish(Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0)))
     
     def process_scan(self, m):
+        """
+        Callback function wheneber a /scan topic is received.
+        Save the scan readings from the four corners of the Neato
+        to a list of lists as self.ranges
+
+        self.ranges will have readings from:
+        [front left, back left, back right, front right]
+        Where every corner is represented as a list of the 9 distance
+        readings surrounding each corner (ex: front left reads from
+        41 degrees through  49 degrees)
+        """
         front_left = []
         front_right = []
         back_left = []
@@ -40,7 +62,18 @@ class WallNode(object):
         self.ranges = [front_left, back_left, back_right, front_right] 
 
     def wall_viz(self, a, b, angle_a, angle_b):
+        """
+        Save a marker of type LINE_STRIP (4) to self.my_marker.
+        
+        a:       polar radius coordinate of first endpoint of marker
+        b:       polar radius coordinate of second endpoint of marker
+        angle_a: polar angle coordinate of first endpoint of marker
+        angle_b: polar angle coordinate of second endpoint of marker
+        """
         my_header = Header(stamp=rospy.Time.now(), frame_id="base_link")
+
+        # inputs are in polar relative to base_link
+        # need to convert to Cartesian to publish the marker
         root2 = math.sqrt(2)/2
         point1 = Point(a*math.cos(math.radians(angle_a)), a*math.sin(math.radians(angle_a)), 0)
         point2 = Point(b*math.cos(math.radians(angle_b)), b*math.sin(math.radians(angle_b)), 0)
@@ -48,9 +81,21 @@ class WallNode(object):
 
 
     def is_parallel(self):
+        """
+        Detects if Neato is parallel to the detected wall.
+        Sets self.parallel to True or False
+        """
         if self.closest_corner == 0 or self.closest_corner == 1:
-            # 10 degree range
+            # wall is on the left, compare two
+            # left corners' laser readings
+
+            # create the marker representing the wall
             self.wall_viz(self.ranges[0][4], self.ranges[1][4], 45, 135)
+
+            # use 9 different degrees of readings per corner
+            # because sometimes readings contain bad data.
+            # always compare the two angles equidistant from
+            # middle of robot
             for i in range (0,9):
                 if abs(self.ranges[0][i]-self.ranges[1][8-i]) < self.threshold and (self.ranges[0][i] != sys.maxint or self.ranges[1][8-i] != sys.maxint):
                     self.parallel = True
@@ -61,6 +106,9 @@ class WallNode(object):
 
 
         elif self.closest_corner == 2 or self.closest_corner == 3:
+            # wall if on the right, so compare two
+            # right corners' laser readings
+
             self.wall_viz(self.ranges[2][4], self.ranges[3][4], 225, 315)
             for i in range(0,9):                
                 if abs(self.ranges[2][i]-self.ranges[3][8-i]) < self.threshold and (self.ranges[2][i] != sys.maxint or self.ranges[3][8-i] != sys.maxint):
@@ -68,8 +116,6 @@ class WallNode(object):
                     return
                 else:
                     self.parallel = False
-
-            
         return   
 
     def run(self):
@@ -77,11 +123,17 @@ class WallNode(object):
         while not rospy.is_shutdown():
             if self.ranges != []:
 
+                # 0.0 means bad data, so set 0s to maxint
+                # so min actual reading can identify closest corner
                 for i, array in enumerate(self.ranges):
                     for j in range(len(array)):
                         if self.ranges[i][j] == 0.0:
                             self.ranges[i][j] = sys.maxint
 
+                
+                # identify the minimum reading from every corner
+                # if >3 maxints are found, entire reading 
+                # considered bad data, so pass
                 min_ranges = []
                 maxint_counter = 0
                 for i in range(0,4):
@@ -91,6 +143,7 @@ class WallNode(object):
                         maxint_counter += 1
                 if maxint_counter >= 3:
                     pass
+
                 self.closest_corner = min_ranges.index(min(min_ranges))
                 self.is_parallel()
                 if self.parallel:
@@ -99,16 +152,11 @@ class WallNode(object):
 
 
                 elif self.closest_corner == 0 or self.closest_corner == 2:
+                    # need to turn right to become parallel
                     twist = Twist(linear=Vector3(0.05,0.0,0.0), angular=Vector3(0.0,0.0,-0.2))
-                    # 0 is the front right corner
-                    # am I parallel to the right?
 
-                    #turn right
                 elif self.closest_corner == 1 or self.closest_corner == 3:
-
-                    # 0 is the back right corner
-                    # am I parallel to the right?
-                    #turn left
+                    # need to turn left to become parallel
                     twist = Twist(linear=Vector3(0.05,0.0,0.0), angular=Vector3(0.0,0.0,0.2))
 
    
@@ -118,5 +166,6 @@ class WallNode(object):
             self.r.sleep()
         
             
-wall_node = WallNode()
-wall_node.run()
+if __name__ == "__main__":
+    wall_node = WallNode()
+    wall_node.run()
