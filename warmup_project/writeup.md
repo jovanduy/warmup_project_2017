@@ -8,7 +8,7 @@ In this task, we wrote our own code to teleoperate the robot. Our code is meant 
 
 We structured our code within a ```TeleopNode``` class. After detecting a keystroke, we enter the corresponding conditional statement. Within each condition, we set the appropriate values for the twist. The twist is then published, and the Neato moves as directed.
 
-## Code structure repeated in all programs
+### Code structure repeated in all programs
 
 Our program starts by, if this program is being run, instantiating a `TeleopNode` object and then calling its `run()` method. Inside of `run` is a while loop with all of our control logic. The termination condition for this loop is if the key `'\x03'` is pressed, similar to the exit command for `teleop_twist_keyboard`. We used this same "instantiate an object of the given node class, call its `run()` method, and have `run()` call a while loop with all of the program's logic until some end condition is met" in all of the programs we wrote for this project. However, in all of the other programs, the termination condition of the while loop is having the built-in rospy method `rospy.is_shutdown()` return `True`. In the beginning of the `run()` methods, call `rospy.on_shutdown(self.stop)`, which sets the given node object's `stop()` method (which publishes a Twist of zero forward and angular velocity to stop the Neato) as a callback to shutting down the node.
 
@@ -35,24 +35,29 @@ In order for the Neato to be considered parallel with the wall, both range dista
 
 ![parallel](imgs/parallel.png)
 
-However, due to difficulty with timing and not infinitely accurate sensors, the two readings from the same side will almost never be exactly the same. Thus, we consider them to be close enough for the Neato to be parallel if their difference is less than .25 m. This threshold was determined through trial and error. Smaller thresholds caused the Neato to spend too much time aligning itself with the wall due to not being considered parallel, while larger thresholds caused alignments that were obviously skewed to be considered parallel.
+However, due to difficulty with timing and not infinitely accurate sensors, the two readings from the same side will almost never be exactly the same. Thus, we consider them to be close enough for the Neato to be parallel if their difference is less than .07 m. This threshold was determined through trial and error. Smaller thresholds caused the Neato to spend too much time aligning itself with the wall due to not being considered parallel, while larger thresholds caused alignments that were obviously skewed to be considered parallel.
 
 If the difference of the two readings is within the threshold, then great! The Neato is parallel to the wall and can move forward. However, if the readings are too far apart, the Neato needs to turn to align itself with the wall. The direction in which it needs to turn depends on which corner is closest to the wall and is shown in the diagrams below. The Neato has achieved parallel alignment once it has turned enough that the difference between the two readings is within the threshold.
 
 ![back right: turn right](imgs/back_right.png)
+
 ![front right: turn left](imgs/front_right.png)
+
 ![back left: turn left](imgs/back_left.png)
+
 ![front left: turn right](imgs/front_left.png)
 
 ## Implementation
-In order to achieve this functionality, we subscribe to the `/scan LaserScan` message in order to find the laser's readings. We have a callback `WallFollower.process_scan(self, m)` that saves the ranges associated with the four corners every time a `/scan` message is published.
+In order to achieve this functionality, we subscribe to the `/scan LaserScan` message in order to find the laser's readings. We place all methods inside of a `WallNode` class. We have a callback `WallNode.process_scan(self, m)` that saves the ranges associated with the four corners every time a `/scan` message is published.
 
-At the same time, we are constantly running a `while` loop that does all of the computation necessary to determine how the Neato should act. As long as range readings are available (meaning `WallFollower.process_scan(self, m)` has been called at least once), the closest corner is identified by comparing the saved scan readings. Then, the parallel test is performed (checking if the readings from the closest corner and the other corner on the same side are close enough) and the state of parallel-ness is set to either `True` or `False`. If the Neato is parallel, then a `/cmd_vel Twist` message object is created with a forward (linear x) velocity of 1.0 m/s. If The Neato is not parallel, then a `/cmd_vel Twist` message object is created with an angular (z) velocity of ±0.4 radians/s to turn the Neato in the appropriate direction to help it achieve parallel-ness. Then, after the correct Twist object is created, the `/cmd_vel Twist` message is published. Then the loop starts over from the beginning!
+At the same time, we are constantly running a `while` loop that does all of the computation necessary to determine how the Neato should act. As long as range readings are available (meaning `WallNode.process_scan(self, m)` has been called at least once), the closest corner is identified by comparing the saved scan readings. Then, the parallel test is performed (checking if the readings from the closest corner and the other corner on the same side are close enough) and the state of parallel-ness is set to either `True` or `False`. If the Neato is parallel, then a `/cmd_vel Twist` message object is created with a forward (linear x) velocity of 1.0 m/s. If The Neato is not parallel, then a `/cmd_vel Twist` message object is created with an angular (z) velocity of ±0.2 radians/s to turn the Neato in the appropriate direction to help it achieve parallel-ness. Then, after the correct Twist object is created, the `/cmd_vel Twist` message is published. Then the loop starts over from the beginning!
 
 ## Decisions and challenges
 The first decision we had to make was having the Neato repeatedly check if it is parallel to the wall. If we had simply allowed it to move forward indefinitely as soon as it was first calculated to be parallel, it could easily stray from the wall if it was even slightly skewed before it started going forward.
 
 Determining the correct turn velocity and the correct parallel threshold values was also difficult. Too fast of a velocity results in the Neato overshooting the parallel state between range updates, causing the Neato be stuck in a "twitching back and forth" motion. Too slow a speed and the Neato is just too slow to behave nicely. A small range threshold, similar to too fast of an angular velocity, results in a twitch motion because falling within the range is too difficult. Too large a range and what the program considers parallel is actually very skewed.
+
+We also had a lot of problems due to faulty laser scan data, which would set a distance to 0.0m. This was problematic because we determined the closest corner to be the corner with the smallest reading. We got around this problem by taking readings from 9 degrees centered around every corner (ex: for the front left corner 45˚, we actually took readings from 41˚ - 49˚) and setting and 0.0s to Python's `sys.maxint`.
 
 # Person Following
 
@@ -63,6 +68,7 @@ The Neato’s lidar scanner that was used to control wall following behavior, wa
 We defined being “in front of” the Neato as being recognized within the 60 degree range directly in front of the robot, and less than a few meters away. To detect a person in this range, We we took the center of mass of the points corresponding to the measured distances from within this 60 degree range. When a person stands in this zone, there is a cluster of points detected by the lidar where the person is standing. The center of mass of this portion of lidar readings is located at this same position.   If that center of mass of the points corresponding to the ranges detected by the lidar scan in front of the robot is within the threshold distance, that position is identified as the location of the person, and is set as a target location. Otherwise, for example, if there is no person present or the person is too far away or behind the robot, the target location is set to (0,0). When the target location is (0,0), the robot will not move.
 
 ![find person](imgs/find_person.png)
+
 ![identified person](imgs/identified_person.png)
 
 The graphics above demonstrate an example of potential lidar readings and how a person would be identified by taking the center of mass of the readings close to and in front  of the robot.
@@ -90,6 +96,8 @@ Given our time constraints, we made the decision that the Neato should always tu
 # Finite state controller
 
 Our finite state controller combined our drive square and person follower programs. The Neato starts off by driving in a square, repeatedly. As soon as a person is detected within the person following range, the Neato transitions to following that person. If the Neato loses sight of the person, it transitions back to driving in a square, as shown below.
+
+![finite state controller](imgs/fsm.png)
 
 ## Drive square
 
